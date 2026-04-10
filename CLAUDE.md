@@ -19,11 +19,11 @@ State is managed with **Riverpod** (`flutter_riverpod`). Settings persist via `s
 
 ```
 lib/
-  main.dart               # Entry point — locks portrait, wraps in ProviderScope
+  main.dart               # Entry point — wraps in ProviderScope (free rotation)
   app.dart                # MaterialApp — rebuilds theme when settings change
   models/
     app_settings.dart     # Immutable settings model with copyWith; single source of truth
-    view_type.dart        # Enum: time | day | week | month | year
+    view_type.dart        # Enum: time | day | week | month | year — also carries `.icon` and `.label` extensions
     color_theme_type.dart # Enum with light/dark color pairs per colorblind mode
     selector_mode.dart    # Enum: iconAndWord | iconOnly | wordOnly
   providers/
@@ -36,6 +36,8 @@ lib/
     app_theme.dart        # Builds ThemeData from AppSettings; barColor() / trackColor() helpers
   screens/
     clock_screen.dart     # Full-screen child view; long-press anywhere → settings
+                          #   OrientationBuilder switches between _PortraitLayout and _LandscapeLayout
+                          #   Landscape: compact vertical stack, toggles + _CompactViewSelector share bottom row
     settings_screen.dart  # Caregiver settings (all options)
   widgets/
     time_progress_bar.dart  # Horizontal bar; FractionallySizedBox driven by progress double
@@ -50,6 +52,8 @@ lib/
 - **Clock stream** aligns its first tick to the next whole second to avoid drift, then uses `Stream.periodic`.
 - **Immersive mode** (`SystemUiMode.immersiveSticky`) is set in `ClockScreen.build()` so the system can't steal it permanently.
 - **No animations on the progress bar** — `FractionallySizedBox` updates each second from the stream. The bar appears to move smoothly because seconds are small increments.
+- **Orientation** is fully unlocked. `OrientationBuilder` in `ClockScreen` selects the layout; portrait uses `displayLarge` for the time, landscape uses `headlineLarge` to recover vertical space. The display toggles always get full horizontal width — never crammed into a side column.
+- **`ViewType.icon`** is an extension getter on the enum (in `view_type.dart`) shared by both `ViewSelector` and `_CompactViewSelector` — do not duplicate the icon mapping elsewhere.
 
 ## PRD
 

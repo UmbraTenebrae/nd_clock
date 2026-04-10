@@ -27,6 +27,7 @@ Five views, one at a time:
 ### Child-friendly interface
 
 - Full-screen immersive display — no system chrome or distractions
+- Responsive to device orientation: portrait and landscape both maintain large, readable controls
 - Large touch targets throughout (minimum 48×48dp)
 - View switching via large icon + word buttons (icon-only or word-only also available)
 - Optional labels: current time, start/end of range, time remaining as a countdown ("2h 14m left"), time remaining as plain language ("about halfway")

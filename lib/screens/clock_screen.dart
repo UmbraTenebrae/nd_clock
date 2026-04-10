@@ -7,6 +7,8 @@ import '../utils/time_utils.dart';
 import '../widgets/time_progress_bar.dart';
 import '../widgets/view_selector.dart';
 import '../models/app_settings.dart';
+import '../models/selector_mode.dart';
+import '../models/view_type.dart';
 import '../theme/app_theme.dart';
 import 'settings_screen.dart';
 
@@ -39,85 +41,37 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     final now = clockAsync.valueOrNull ?? DateTime.now();
     final view = settings.activeView;
     final progress = progressFor(view, now, settings);
+    final timeString = _formatCurrentTime(now, settings.use24Hour);
 
     return Scaffold(
       body: GestureDetector(
-        // 3-second long-press anywhere opens settings.
         onLongPressEnd: _onLongPressEnd,
         onLongPressCancel: _onLongPressCancel,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Current time
-                Center(
-                  child: Text(
-                    _formatCurrentTime(now, settings.use24Hour),
-                    style: Theme.of(context).textTheme.displayLarge,
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Progress bar
-                TimeProgressBar(progress: progress, settings: settings),
-
-                // Start / end labels
-                if (settings.caregiverAllowStartEnd && settings.childShowStartEnd)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          startLabelFor(view, now, settings),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        Text(
-                          endLabelFor(view, now, settings),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-
-                // Time remaining: countdown
-                if (settings.caregiverAllowCountdown && settings.childShowCountdown)
-                  Center(
-                    child: Text(
-                      countdownLabel(view, now, settings),
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                  ),
-
-                // Time remaining: proportion
-                if (settings.caregiverAllowProportion && settings.childShowProportion)
-                  Center(
-                    child: Text(
-                      proportionLabel(progress),
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                  ),
-
-                const Spacer(),
-
-                // Child-facing display toggles
-                _DisplayToggles(settings: settings),
-
-                const SizedBox(height: 16),
-
-                // View selector
-                ViewSelector(
-                  settings: settings,
-                  onSelect: (v) =>
-                      ref.read(settingsProvider.notifier).setActiveView(v),
-                ),
-              ],
-            ),
+          child: OrientationBuilder(
+            builder: (context, orientation) {
+              return orientation == Orientation.portrait
+                  ? _PortraitLayout(
+                      settings: settings,
+                      now: now,
+                      view: view,
+                      progress: progress,
+                      timeString: timeString,
+                      onSelect: (v) => ref
+                          .read(settingsProvider.notifier)
+                          .setActiveView(v),
+                    )
+                  : _LandscapeLayout(
+                      settings: settings,
+                      now: now,
+                      view: view,
+                      progress: progress,
+                      timeString: timeString,
+                      onSelect: (v) => ref
+                          .read(settingsProvider.notifier)
+                          .setActiveView(v),
+                    );
+            },
           ),
         ),
       ),
@@ -131,6 +85,246 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     final period = now.hour < 12 ? 'AM' : 'PM';
     final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
     return '$hour:${now.minute.toString().padLeft(2, '0')} $period';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Portrait layout — vertical stack
+// ---------------------------------------------------------------------------
+
+class _PortraitLayout extends StatelessWidget {
+  final AppSettings settings;
+  final DateTime now;
+  final ViewType view;
+  final double progress;
+  final String timeString;
+  final void Function(ViewType) onSelect;
+
+  const _PortraitLayout({
+    required this.settings,
+    required this.now,
+    required this.view,
+    required this.progress,
+    required this.timeString,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Text(
+              timeString,
+              style: Theme.of(context).textTheme.displayLarge,
+            ),
+          ),
+          const Spacer(),
+          TimeProgressBar(progress: progress, settings: settings),
+          _StartEndLabels(settings: settings, now: now, view: view),
+          const SizedBox(height: 16),
+          _RemainingLabels(
+              settings: settings, now: now, view: view, progress: progress),
+          const Spacer(),
+          _DisplayToggles(settings: settings),
+          const SizedBox(height: 16),
+          ViewSelector(settings: settings, onSelect: onSelect),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Landscape layout — bar centred vertically, controls on sides
+// ---------------------------------------------------------------------------
+
+class _LandscapeLayout extends StatelessWidget {
+  final AppSettings settings;
+  final DateTime now;
+  final ViewType view;
+  final double progress;
+  final String timeString;
+  final void Function(ViewType) onSelect;
+
+  const _LandscapeLayout({
+    required this.settings,
+    required this.now,
+    required this.view,
+    required this.progress,
+    required this.timeString,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Time display — smaller style than portrait to save vertical space
+          Center(
+            child: Text(
+              timeString,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Progress bar
+          TimeProgressBar(progress: progress, settings: settings),
+          _StartEndLabels(settings: settings, now: now, view: view),
+          _RemainingLabels(
+              settings: settings, now: now, view: view, progress: progress),
+          const Spacer(),
+          // Bottom row: display toggles on the left, view selector on the right
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: _DisplayToggles(settings: settings)),
+              const SizedBox(width: 12),
+              _CompactViewSelector(settings: settings, onSelect: onSelect),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared sub-widgets
+// ---------------------------------------------------------------------------
+
+class _StartEndLabels extends StatelessWidget {
+  final AppSettings settings;
+  final DateTime now;
+  final ViewType view;
+
+  const _StartEndLabels(
+      {required this.settings, required this.now, required this.view});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!settings.caregiverAllowStartEnd || !settings.childShowStartEnd) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(startLabelFor(view, now, settings),
+              style: Theme.of(context).textTheme.bodyLarge),
+          Text(endLabelFor(view, now, settings),
+              style: Theme.of(context).textTheme.bodyLarge),
+        ],
+      ),
+    );
+  }
+}
+
+class _RemainingLabels extends StatelessWidget {
+  final AppSettings settings;
+  final DateTime now;
+  final ViewType view;
+  final double progress;
+
+  const _RemainingLabels({
+    required this.settings,
+    required this.now,
+    required this.view,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final showCountdown =
+        settings.caregiverAllowCountdown && settings.childShowCountdown;
+    final showProportion =
+        settings.caregiverAllowProportion && settings.childShowProportion;
+    if (!showCountdown && !showProportion) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (showCountdown)
+          Text(countdownLabel(view, now, settings),
+              style: Theme.of(context).textTheme.headlineLarge),
+        if (showProportion)
+          Text(proportionLabel(progress),
+              style: Theme.of(context).textTheme.headlineLarge),
+      ],
+    );
+  }
+}
+
+/// Compact horizontal view selector used in the landscape bottom row.
+/// Mirrors ViewSelector but with tighter padding so it sits beside the toggles.
+class _CompactViewSelector extends StatelessWidget {
+  final AppSettings settings;
+  final void Function(ViewType) onSelect;
+
+  const _CompactViewSelector(
+      {required this.settings, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.primary;
+    final bg = theme.scaffoldBackgroundColor;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: settings.enabledViews.map((view) {
+        final isActive = view == settings.activeView;
+        final color = isActive ? bg : fg;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3),
+          child: GestureDetector(
+            onTap: () => onSelect(view),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                color: isActive ? fg : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: fg, width: isActive ? 0 : 1.5),
+              ),
+              child: switch (settings.selectorMode) {
+                SelectorMode.iconOnly =>
+                  Icon(view.icon, color: color, size: 22),
+                SelectorMode.wordOnly => Text(view.label,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 13,
+                        fontWeight: isActive
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                SelectorMode.iconAndWord => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(view.icon, color: color, size: 22),
+                      const SizedBox(height: 2),
+                      Text(view.label,
+                          style: TextStyle(
+                              color: color,
+                              fontSize: 11,
+                              fontWeight: isActive
+                                  ? FontWeight.bold
+                                  : FontWeight.normal)),
+                    ],
+                  ),
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 

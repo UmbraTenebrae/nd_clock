@@ -3,21 +3,6 @@ import '../models/view_type.dart';
 import '../models/selector_mode.dart';
 import '../models/app_settings.dart';
 
-/// Maps each ViewType to a Material icon.
-IconData _iconFor(ViewType view) {
-  switch (view) {
-    case ViewType.time:
-      return Icons.access_time_rounded;
-    case ViewType.day:
-      return Icons.wb_sunny_rounded;
-    case ViewType.week:
-      return Icons.view_week_rounded;
-    case ViewType.month:
-      return Icons.calendar_month_rounded;
-    case ViewType.year:
-      return Icons.calendar_today_rounded;
-  }
-}
 
 class ViewSelector extends StatelessWidget {
   final AppSettings settings;
@@ -66,7 +51,7 @@ class ViewSelector extends StatelessWidget {
   Widget _buildContent(
       ViewType view, bool isActive, Color fg, Color bg) {
     final color = isActive ? bg : fg;
-    final icon = Icon(_iconFor(view), color: color, size: 28);
+    final icon = Icon(view.icon, color: color, size: 28);
     final label = Text(
       view.label,
       textAlign: TextAlign.center,
