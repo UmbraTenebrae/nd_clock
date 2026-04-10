@@ -76,6 +76,47 @@ double _yearProgress(DateTime now) {
   return (elapsed / daysInYear).clamp(0.0, 1.0);
 }
 
+/// The large display string shown above the bar — contextual to the active view.
+///
+/// - Time / Day → current time ("3:45 PM" / "15:45")
+/// - Week       → current day name ("Wednesday")
+/// - Month      → month + day ("April 10")
+/// - Year       → current month name ("April")
+String currentDisplayLabel(ViewType view, DateTime now, AppSettings settings) {
+  switch (view) {
+    case ViewType.time:
+    case ViewType.day:
+      return _formatTime(now, settings.use24Hour);
+    case ViewType.week:
+      return _weekdayName(now.weekday);
+    case ViewType.month:
+      return '${_monthName(now.month)} ${now.day}';
+    case ViewType.year:
+      return _monthName(now.month);
+  }
+}
+
+const _weekdays = [
+  '', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+];
+
+const _months = [
+  '', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+String _weekdayName(int weekday) => _weekdays[weekday];
+String _monthName(int month) => _months[month];
+
+String _formatTime(DateTime now, bool use24Hour) {
+  if (use24Hour) {
+    return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  }
+  final period = now.hour < 12 ? 'AM' : 'PM';
+  final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+  return '$hour:${now.minute.toString().padLeft(2, '0')} $period';
+}
+
 /// Human-readable start label for each view.
 String startLabelFor(ViewType view, DateTime now, AppSettings settings) {
   switch (view) {
@@ -123,7 +164,12 @@ String _formatTimeOfDay(TimeOfDay t, bool use24Hour) {
   return '$hour:${t.minute.toString().padLeft(2, '0')} $period';
 }
 
-/// Returns a countdown string like "2h 14m left" based on remaining progress.
+/// Returns a countdown string appropriate for the active view's scale.
+///
+/// - Time / Day → "2h 14m left"
+/// - Week       → "3 days left" (or hours if < 1 day remains)
+/// - Month      → "18 days left" (or hours if < 1 day remains)
+/// - Year       → "8 months left" → "3 weeks left" → "5 days left"
 String countdownLabel(ViewType view, DateTime now, AppSettings settings) {
   final progress = progressFor(view, now, settings);
   final remaining = 1.0 - progress;
@@ -132,13 +178,40 @@ String countdownLabel(ViewType view, DateTime now, AppSettings settings) {
   final totalSeconds = _totalSecondsFor(view, now, settings);
   final remainingSeconds = (totalSeconds * remaining).round();
 
+  switch (view) {
+    case ViewType.time:
+    case ViewType.day:
+      return _hoursMinutesLeft(remainingSeconds);
+
+    case ViewType.week:
+    case ViewType.month:
+      final days = remainingSeconds ~/ 86400;
+      if (days >= 1) return days == 1 ? '1 day left' : '$days days left';
+      return _hoursMinutesLeft(remainingSeconds);
+
+    case ViewType.year:
+      final days = remainingSeconds ~/ 86400;
+      final weeks = days ~/ 7;
+      final months = _remainingWholeMonths(now);
+      if (months >= 2) return '$months months left';
+      if (weeks >= 2) return '$weeks weeks left';
+      if (days >= 1) return days == 1 ? '1 day left' : '$days days left';
+      return _hoursMinutesLeft(remainingSeconds);
+  }
+}
+
+String _hoursMinutesLeft(int remainingSeconds) {
   final hours = remainingSeconds ~/ 3600;
   final minutes = (remainingSeconds % 3600) ~/ 60;
-
   if (hours > 0 && minutes > 0) return '${hours}h ${minutes}m left';
   if (hours > 0) return '${hours}h left';
   if (minutes > 0) return '${minutes}m left';
   return 'Less than a minute left';
+}
+
+/// Counts whole calendar months remaining in the year after the current one.
+int _remainingWholeMonths(DateTime now) {
+  return 12 - now.month;
 }
 
 /// Returns a plain-language proportion string like "about halfway".

@@ -16,13 +16,15 @@ The entire screen is a single horizontal progress bar. The bar fills left-to-rig
 
 Five views, one at a time:
 
-| View | What the bar shows |
-|------|--------------------|
-| **Time** | A caregiver-configured time range (e.g. 8 AM – 4 PM), or a 12/24-hour default |
-| **Day** | Midnight to midnight |
-| **Week** | Sunday to Saturday |
-| **Month** | Percentage of days elapsed in the current month |
-| **Year** | Percentage of days elapsed in the current year |
+| View | What the bar shows | Display label | Countdown |
+|------|-------------------|---------------|-----------|
+| **Time** | A caregiver-configured time range (e.g. 8 AM – 4 PM), or a 12/24-hour default | Current time | `2h 14m left` |
+| **Day** | Midnight to midnight | Current time | `2h 14m left` |
+| **Week** | Sunday to Saturday | Day name (e.g. *Wednesday*) | `3 days left` |
+| **Month** | Days elapsed in the current month | Month and day (e.g. *April 10*) | `18 days left` |
+| **Year** | Days elapsed in the current year | Month name (e.g. *April*) | `8 months left` |
+
+Each view shows the most meaningful unit of time — not just hours and minutes when the bar represents a whole week or year.
 
 ### Child-friendly interface
 

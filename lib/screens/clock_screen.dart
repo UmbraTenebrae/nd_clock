@@ -41,7 +41,7 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     final now = clockAsync.valueOrNull ?? DateTime.now();
     final view = settings.activeView;
     final progress = progressFor(view, now, settings);
-    final timeString = _formatCurrentTime(now, settings.use24Hour);
+    final timeString = currentDisplayLabel(view, now, settings);
 
     return Scaffold(
       body: GestureDetector(
@@ -78,14 +78,6 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     );
   }
 
-  String _formatCurrentTime(DateTime now, bool use24Hour) {
-    if (use24Hour) {
-      return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    }
-    final period = now.hour < 12 ? 'AM' : 'PM';
-    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
-    return '$hour:${now.minute.toString().padLeft(2, '0')} $period';
-  }
 }
 
 // ---------------------------------------------------------------------------
