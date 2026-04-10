@@ -1,0 +1,23 @@
+name: nd_clock
+description: A neurodivergent-friendly clock with linear progress bars for time, day, week, month, and year.
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.3
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
