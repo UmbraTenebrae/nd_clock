@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'view_type.dart';
 import 'color_theme_type.dart';
 import 'selector_mode.dart';
+import 'app_event.dart';
 
 /// All caregiver-controlled configuration for the app.
 /// Persisted via SharedPreferences.
@@ -34,6 +35,11 @@ class AppSettings {
   final bool childShowCountdown;
   final bool childShowProportion;
 
+  // --- Events (time view only) ---
+  final List<AppEvent> events;
+  final bool caregiverAllowEventLabels;
+  final bool childShowEventLabels;
+
   const AppSettings({
     this.useCustomRange = false,
     this.use24Hour = false,
@@ -57,6 +63,9 @@ class AppSettings {
     this.childShowStartEnd = true,
     this.childShowCountdown = false,
     this.childShowProportion = false,
+    this.events = const [],
+    this.caregiverAllowEventLabels = true,
+    this.childShowEventLabels = true,
   });
 
   AppSettings copyWith({
@@ -76,6 +85,9 @@ class AppSettings {
     bool? childShowStartEnd,
     bool? childShowCountdown,
     bool? childShowProportion,
+    List<AppEvent>? events,
+    bool? caregiverAllowEventLabels,
+    bool? childShowEventLabels,
   }) {
     return AppSettings(
       useCustomRange: useCustomRange ?? this.useCustomRange,
@@ -97,6 +109,10 @@ class AppSettings {
       childShowStartEnd: childShowStartEnd ?? this.childShowStartEnd,
       childShowCountdown: childShowCountdown ?? this.childShowCountdown,
       childShowProportion: childShowProportion ?? this.childShowProportion,
+      events: events ?? this.events,
+      caregiverAllowEventLabels:
+          caregiverAllowEventLabels ?? this.caregiverAllowEventLabels,
+      childShowEventLabels: childShowEventLabels ?? this.childShowEventLabels,
     );
   }
 }

@@ -125,7 +125,7 @@ class _PortraitLayout extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: h * 0.04),
-                    TimeProgressBar(progress: progress, settings: settings),
+                    TimeProgressBar(progress: progress, settings: settings, now: now),
                     _StartEndLabels(settings: settings, now: now, view: view),
                     SizedBox(height: h * 0.02),
                     _RemainingLabels(
@@ -194,7 +194,7 @@ class _LandscapeLayout extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: h * 0.04),
-                    TimeProgressBar(progress: progress, settings: settings),
+                    TimeProgressBar(progress: progress, settings: settings, now: now),
                     _StartEndLabels(settings: settings, now: now, view: view),
                     SizedBox(height: h * 0.02),
                     _RemainingLabels(
@@ -275,12 +275,19 @@ class _RemainingLabels extends StatelessWidget {
         settings.caregiverAllowProportion && settings.childShowProportion;
     if (!showCountdown && !showProportion) return const SizedBox.shrink();
 
+    final nextEvent = showCountdown
+        ? nextEventLabel(view, now, settings)
+        : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showCountdown)
           Text(countdownLabel(view, now, settings),
               style: Theme.of(context).textTheme.headlineLarge),
+        if (nextEvent != null)
+          Text(nextEvent,
+              style: Theme.of(context).textTheme.bodyLarge),
         if (showProportion)
           Text(proportionLabel(progress),
               style: Theme.of(context).textTheme.headlineLarge),
@@ -395,6 +402,16 @@ class _DisplayToggles extends ConsumerWidget {
         active: settings.childShowProportion,
         color: fg,
         onTap: notifier.toggleChildProportion,
+      ));
+    }
+
+    if (settings.caregiverAllowEventLabels && settings.events.isNotEmpty) {
+      toggles.add(_ToggleButton(
+        label: 'Events',
+        icon: Icons.label_rounded,
+        active: settings.childShowEventLabels,
+        color: fg,
+        onTap: notifier.toggleChildEventLabels,
       ));
     }
 

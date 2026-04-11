@@ -50,19 +50,24 @@ class AppTheme {
     );
   }
 
-  /// The bar fill color for the current settings.
+  /// Foreground color for UI elements and text.
   static Color barColor(AppSettings settings) {
     return settings.darkMode
         ? settings.colorTheme.barColorDark
         : settings.colorTheme.barColor;
   }
 
-  /// The bar track (unfilled) color for the current settings.
+  /// Fill color for the elapsed portion of the progress bar.
+  static Color barFillColor(AppSettings settings) {
+    return settings.darkMode
+        ? settings.colorTheme.barFillColorDark
+        : settings.colorTheme.barFillColor;
+  }
+
+  /// Track (unfilled) color for the progress bar.
   static Color trackColor(AppSettings settings) {
-    final bg = settings.darkMode
-        ? settings.colorTheme.backgroundColorDark
-        : settings.colorTheme.backgroundColor;
-    // Track is a muted version of the foreground color on the background.
-    return Color.lerp(barColor(settings), bg, 0.75)!;
+    return settings.darkMode
+        ? settings.colorTheme.barTrackColorDark
+        : settings.colorTheme.barTrackColor;
   }
 }

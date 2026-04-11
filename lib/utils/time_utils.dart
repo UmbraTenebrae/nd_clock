@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
+import '../models/app_event.dart';
 import '../models/view_type.dart';
 
 /// Returns a progress value in [0.0, 1.0] for the given [view] at [now].
@@ -74,6 +75,26 @@ double _yearProgress(DateTime now) {
       startOfNextYear.difference(startOfYear).inSeconds.toDouble();
   final elapsed = now.difference(startOfYear).inSeconds.toDouble();
   return (elapsed / daysInYear).clamp(0.0, 1.0);
+}
+
+/// Position of an event as a fraction [0,1] within the time view range.
+/// Returns null if the event falls outside the configured range.
+double? eventFractionFor(AppEvent event, AppSettings settings) {
+  final start = settings.useCustomRange
+      ? settings.customStartTime
+      : const TimeOfDay(hour: 0, minute: 0);
+  final end = settings.useCustomRange
+      ? settings.customEndTime
+      : const TimeOfDay(hour: 23, minute: 59);
+
+  final startSeconds = start.hour * 3600 + start.minute * 60;
+  final endSeconds = end.hour * 3600 + end.minute * 60;
+  final eventSeconds = event.time.hour * 3600 + event.time.minute * 60;
+
+  if (endSeconds <= startSeconds) return null;
+  if (eventSeconds < startSeconds || eventSeconds > endSeconds) return null;
+
+  return (eventSeconds - startSeconds) / (endSeconds - startSeconds);
 }
 
 /// The large display string shown above the bar — contextual to the active view.
@@ -212,6 +233,42 @@ String _hoursMinutesLeft(int remainingSeconds) {
 /// Counts whole calendar months remaining in the year after the current one.
 int _remainingWholeMonths(DateTime now) {
   return 12 - now.month;
+}
+
+/// Returns "Xh Ym until [label]" for the next upcoming event, or null if none.
+/// Only meaningful on the time view; returns null for other views.
+String? nextEventLabel(ViewType view, DateTime now, AppSettings settings) {
+  if (view != ViewType.time) return null;
+  if (settings.events.isEmpty) return null;
+
+  final nowMinutes = now.hour * 60 + now.minute;
+
+  AppEvent? next;
+  int? minDiff;
+  for (final event in settings.events) {
+    final eventMinutes = event.time.hour * 60 + event.time.minute;
+    if (eventMinutes > nowMinutes) {
+      final diff = eventMinutes - nowMinutes;
+      if (minDiff == null || diff < minDiff) {
+        minDiff = diff;
+        next = event;
+      }
+    }
+  }
+
+  if (next == null || minDiff == null) return null;
+
+  final hours = minDiff ~/ 60;
+  final minutes = minDiff % 60;
+  final String timeStr;
+  if (hours > 0 && minutes > 0) {
+    timeStr = '${hours}h ${minutes}m';
+  } else if (hours > 0) {
+    timeStr = '${hours}h';
+  } else {
+    timeStr = '${minutes}m';
+  }
+  return '$timeStr until ${next.label}';
 }
 
 /// Returns a plain-language proportion string like "about halfway".

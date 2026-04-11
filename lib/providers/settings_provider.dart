@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
+import '../models/app_event.dart';
 import '../models/view_type.dart';
 import '../models/color_theme_type.dart';
 import '../models/selector_mode.dart';
@@ -80,7 +81,22 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           prefs.getBool('${_prefix}childShowCountdown') ?? false,
       childShowProportion:
           prefs.getBool('${_prefix}childShowProportion') ?? false,
+      events: _loadEvents(prefs),
+      caregiverAllowEventLabels:
+          prefs.getBool('${_prefix}caregiverAllowEventLabels') ?? true,
+      childShowEventLabels:
+          prefs.getBool('${_prefix}childShowEventLabels') ?? true,
     );
+  }
+
+  List<AppEvent> _loadEvents(SharedPreferences prefs) {
+    final raw = prefs.getString('${_prefix}events');
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      return AppEvent.decodeList(raw);
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<void> _save() async {
@@ -115,6 +131,12 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
         '${_prefix}childShowCountdown', state.childShowCountdown);
     await prefs.setBool(
         '${_prefix}childShowProportion', state.childShowProportion);
+    await prefs.setString(
+        '${_prefix}events', AppEvent.encodeList(state.events));
+    await prefs.setBool(
+        '${_prefix}caregiverAllowEventLabels', state.caregiverAllowEventLabels);
+    await prefs.setBool(
+        '${_prefix}childShowEventLabels', state.childShowEventLabels);
   }
 
   void update(AppSettings Function(AppSettings) updater) {
@@ -134,4 +156,18 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
 
   void toggleChildProportion() =>
       update((s) => s.copyWith(childShowProportion: !s.childShowProportion));
+
+  void toggleChildEventLabels() =>
+      update((s) => s.copyWith(childShowEventLabels: !s.childShowEventLabels));
+
+  // --- Event CRUD ---
+
+  void addEvent(AppEvent event) =>
+      update((s) => s.copyWith(events: [...s.events, event]));
+
+  void updateEvent(AppEvent event) => update((s) => s.copyWith(
+      events: s.events.map((e) => e.id == event.id ? event : e).toList()));
+
+  void deleteEvent(String id) =>
+      update((s) => s.copyWith(events: s.events.where((e) => e.id != id).toList()));
 }

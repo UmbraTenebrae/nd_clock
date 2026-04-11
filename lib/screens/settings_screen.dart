@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/settings_provider.dart';
+import '../models/app_event.dart';
 import '../models/view_type.dart';
 import '../models/color_theme_type.dart';
 import '../models/selector_mode.dart';
@@ -151,7 +152,105 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (v) => notifier
                 .update((s) => s.copyWith(caregiverAllowProportion: v)),
           ),
+          SwitchListTile(
+            title: const Text('Event labels'),
+            subtitle: const Text('Show labels on event markers'),
+            value: settings.caregiverAllowEventLabels,
+            onChanged: (v) => notifier
+                .update((s) => s.copyWith(caregiverAllowEventLabels: v)),
+          ),
+
+          // --- Events ---
+          _SectionHeader('Events (Time View)'),
+          const Text(
+            'Markers shown on the time bar for upcoming events.',
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          ...settings.events.map((event) => ListTile(
+                leading: const Icon(Icons.flag_rounded),
+                title: Text(event.label),
+                subtitle: Text(event.time.format(context)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => notifier.deleteEvent(event.id),
+                ),
+                onTap: () => _showEventDialog(context, ref, event: event),
+              )),
+          ListTile(
+            leading: const Icon(Icons.add_circle_outline),
+            title: const Text('Add event'),
+            onTap: () => _showEventDialog(context, ref),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showEventDialog(BuildContext context, WidgetRef ref,
+      {AppEvent? event}) {
+    final notifier = ref.read(settingsProvider.notifier);
+    final labelController =
+        TextEditingController(text: event?.label ?? '');
+    TimeOfDay selectedTime =
+        event?.time ?? TimeOfDay.now();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text(event == null ? 'Add event' : 'Edit event'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: labelController,
+                decoration: const InputDecoration(labelText: 'Label'),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Time'),
+                subtitle: Text(selectedTime.format(context)),
+                trailing: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: ctx,
+                    initialTime: selectedTime,
+                  );
+                  if (picked != null) {
+                    setState(() => selectedTime = picked);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final label = labelController.text.trim();
+                if (label.isEmpty) return;
+                if (event == null) {
+                  notifier.addEvent(AppEvent(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    time: selectedTime,
+                    label: label,
+                  ));
+                } else {
+                  notifier.updateEvent(
+                      event.copyWith(time: selectedTime, label: label));
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text(event == null ? 'Add' : 'Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -166,7 +265,7 @@ class SettingsScreen extends ConsumerWidget {
           return ListTile(
             title: Text(theme.label),
             leading: CircleAvatar(
-              backgroundColor: theme.barColor,
+              backgroundColor: theme.barFillColor,
               child: Icon(Icons.check,
                   color: theme.backgroundColor, size: 16),
             ),
