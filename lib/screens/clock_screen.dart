@@ -103,29 +103,47 @@ class _PortraitLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Text(
-              timeString,
-              style: Theme.of(context).textTheme.displayLarge,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final h = constraints.maxHeight;
+        return Padding(
+          padding: EdgeInsets.symmetric(
+              horizontal: h * 0.06, vertical: h * 0.05),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Time, bar, and labels grouped and centred in available space
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Text(
+                        timeString,
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
+                    ),
+                    SizedBox(height: h * 0.04),
+                    TimeProgressBar(progress: progress, settings: settings),
+                    _StartEndLabels(settings: settings, now: now, view: view),
+                    SizedBox(height: h * 0.02),
+                    _RemainingLabels(
+                        settings: settings,
+                        now: now,
+                        view: view,
+                        progress: progress),
+                  ],
+                ),
+              ),
+              // Controls anchored to the bottom
+              _DisplayToggles(settings: settings),
+              SizedBox(height: h * 0.02),
+              ViewSelector(settings: settings, onSelect: onSelect),
+            ],
           ),
-          const Spacer(),
-          TimeProgressBar(progress: progress, settings: settings),
-          _StartEndLabels(settings: settings, now: now, view: view),
-          const SizedBox(height: 16),
-          _RemainingLabels(
-              settings: settings, now: now, view: view, progress: progress),
-          const Spacer(),
-          _DisplayToggles(settings: settings),
-          const SizedBox(height: 16),
-          ViewSelector(settings: settings, onSelect: onSelect),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -153,36 +171,53 @@ class _LandscapeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Time display — smaller style than portrait to save vertical space
-          Center(
-            child: Text(
-              timeString,
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Progress bar
-          TimeProgressBar(progress: progress, settings: settings),
-          _StartEndLabels(settings: settings, now: now, view: view),
-          _RemainingLabels(
-              settings: settings, now: now, view: view, progress: progress),
-          const Spacer(),
-          // Bottom row: display toggles on the left, view selector on the right
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final h = constraints.maxHeight;
+        final w = constraints.maxWidth;
+        return Padding(
+          padding: EdgeInsets.symmetric(
+              horizontal: w * 0.04, vertical: h * 0.04),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: _DisplayToggles(settings: settings)),
-              const SizedBox(width: 12),
-              _CompactViewSelector(settings: settings, onSelect: onSelect),
+              // Main content fills available space and centres itself
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Text(
+                        timeString,
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                    ),
+                    SizedBox(height: h * 0.04),
+                    TimeProgressBar(progress: progress, settings: settings),
+                    _StartEndLabels(settings: settings, now: now, view: view),
+                    SizedBox(height: h * 0.02),
+                    _RemainingLabels(
+                        settings: settings,
+                        now: now,
+                        view: view,
+                        progress: progress),
+                  ],
+                ),
+              ),
+              // Bottom row: toggles + view selector always at the bottom
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: _DisplayToggles(settings: settings)),
+                  SizedBox(width: w * 0.02),
+                  _CompactViewSelector(settings: settings, onSelect: onSelect),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
