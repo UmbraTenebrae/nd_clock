@@ -1,5 +1,5 @@
 name: nd_clock
-description: A neurodivergent-friendly clock with linear progress bars for time, day, week, month, and year.
+description: Prism — a neurodivergent-friendly clock with linear progress bars for time, day, week, month, and year.
 publish_to: 'none'
 
 version: 0.1.0+1

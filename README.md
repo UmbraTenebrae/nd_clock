@@ -1,8 +1,8 @@
-# nd_clock
+# Prism
 
 A neurodivergent-friendly clock for Android and iOS, built with Flutter.
 
-Traditional clocks — analog or digital — require spatial reasoning and abstract number mapping that many neurodivergent children find inaccessible. nd_clock replaces the clock face with a simple horizontal progress bar that shows time as a visual portion of a whole: immediately graspable, no number literacy required.
+Traditional clocks — analog or digital — require spatial reasoning and abstract number mapping that many neurodivergent children find inaccessible. Prism replaces the clock face with a simple horizontal progress bar that shows time as a visual portion of a whole: immediately graspable, no number literacy required.
 
 Designed primarily for autistic children ages 4–12, with dyslexia and dyscalculia as first-class considerations.
 
@@ -77,7 +77,7 @@ Every theme has a dark mode equivalent. Dark mode is an explicit toggle — it d
 ### Install and run
 
 ```bash
-git clone https://github.com/your-username/nd_clock.git
+git clone https://github.com/UmbraTenebrae/nd_clock.git
 cd nd_clock
 flutter pub get
 flutter run

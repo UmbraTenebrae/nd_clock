@@ -15,7 +15,7 @@ flutter build ios        # iOS release build
 
 ## Architecture
 
-State is managed with **Riverpod** (`flutter_riverpod`). Settings persist via `shared_preferences`. There is no backend.
+The app is named **Prism** (display name on both platforms). The Flutter package name remains `nd_clock`. State is managed with **Riverpod** (`flutter_riverpod`). Settings persist via `shared_preferences`. There is no backend.
 
 ```
 lib/

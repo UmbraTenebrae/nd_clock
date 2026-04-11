@@ -12,7 +12,7 @@ class NdClockApp extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
 
     return MaterialApp(
-      title: 'nd_clock',
+      title: 'Prism',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(settings),
       home: const ClockScreen(),
