@@ -1,7 +1,7 @@
 # Product Requirements Document: nd_clock
 
-**Version:** 0.3
-**Last Updated:** 2026-04-10
+**Version:** 0.4
+**Last Updated:** 2026-04-12
 **Author:** Solo project
 **Platform:** Flutter (Android + iOS)
 **Distribution:** App Store + Google Play (eventual public release)
@@ -97,8 +97,9 @@ Each option below can be enabled or disabled by the caregiver in settings. Enabl
 |--------|-------------|
 | **Current time** | Digital time display in large, dyslexia-friendly font (always visible) |
 | **Start / End labels** | Shows the start and end values at the left and right ends of the bar |
-| **Time remaining (countdown)** | e.g., "2h 14m left" |
-| **Time remaining (proportion)** | e.g., "about a quarter left" — uses plain-language fractions |
+| **Time remaining (countdown)** | e.g., "2h 14m left"; also shows "2h until Lunch" if an event is upcoming |
+| **Time remaining (proportion)** | e.g., "about a quarter left" — plain-language fractions alongside a pie-slice graphic |
+| **Event labels** | Named event markers on the Time bar (e.g., "Lunch", "Home"); past events grey, future events theme-colored |
 
 Both time-remaining formats can be active simultaneously if the caregiver enables both.
 
@@ -115,20 +116,19 @@ Both time-remaining formats can be active simultaneously if the caregiver enable
 
 ### 7.2 Color
 
-**Default theme:** Black progress bar on white background (maximum contrast, no color dependency)
+**Default theme:** Red progress bar on white background; event tick marks in black for contrast against both bar and track.
 
 **Colorblind-friendly modes** (caregiver selects):
 
-| Mode | Description |
-|------|-------------|
-| Default | Black / white |
-| High contrast | Pure black / pure white, thicker bar |
-| Deuteranopia-safe | Blue / light yellow (avoids red-green axis) |
-| Protanopia-safe | Blue / light yellow |
-| Tritanopia-safe | Red / teal |
-| Custom | Caregiver picks foreground and background colors from a curated safe palette |
+| Mode | Bar fill | Event ticks | Background |
+|------|----------|-------------|------------|
+| Default | Red | Black | White |
+| High contrast | Red (thicker bar) | Black | White |
+| Deuteranopia-safe | Blue | Orange | Light yellow |
+| Protanopia-safe | Blue | Orange | Light yellow |
+| Tritanopia-safe | Red | Purple | Teal |
 
-All built-in themes must pass WCAG AA contrast ratio (4.5:1 minimum). Custom palette picker should only offer pre-validated color pairs.
+Each color slot (bar fill, event ticks, unfilled track) is independently specified per theme to ensure legibility without color confusion. All built-in themes pass WCAG AA contrast ratio (4.5:1 minimum). All themes have dark-mode equivalents.
 
 ### 7.3 Light / Dark Mode
 
@@ -194,13 +194,13 @@ Settings include:
 - **State management:** TBD (provider/riverpod recommended for this scale)
 - **Persistence:** Caregiver settings stored locally via `shared_preferences` or `flutter_secure_storage`
 - **No backend required for v1**
-- Progress bar animation should use a `AnimationController` driven by wall-clock time rather than frame-based deltas, to ensure accuracy
+- Progress bar updates from a `StreamProvider<DateTime>` aligned to wall-clock seconds; no `AnimationController` needed — sub-second drift is imperceptible at this time scale
+- **Home screen widget (Android):** `AppWidgetProvider` (`PrismWidgetProvider`) reads progress, view label, current time, and countdown from SharedPreferences written by Flutter via `home_widget`. System minimum update period is 30 minutes; Flutter pushes updates once per minute while the app is in foreground.
 
 ---
 
 ## 10. Open Questions
 
-- [ ] Should the proportion labels be text-only or accompanied by a simple graphic (e.g., a pie slice)? *(deferred to v1.1)*
 - [ ] Should dark mode also follow the system setting automatically as a secondary option? *(deferred)*
 
 **Resolved:**
@@ -209,6 +209,8 @@ Settings include:
 - [x] Bar rollover: resets to 0% at the start of each new cycle, no special animation
 - [x] Caregiver settings access: long-press corner for 3 seconds, no PIN
 - [x] Week starts Sunday 00:00, ends Saturday 23:59
+- [x] Proportion label graphic: pie-slice `CustomPainter` displayed inline left of the proportion text; uses bar fill and track colors for visual consistency
+- [x] Home screen widget: Android only (v1); iOS requires WidgetKit extension target added via Xcode
 
 ---
 

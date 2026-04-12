@@ -6,11 +6,13 @@ import '../providers/settings_provider.dart';
 import '../utils/time_utils.dart';
 import '../widgets/time_progress_bar.dart';
 import '../widgets/view_selector.dart';
+import '../widgets/proportion_pie.dart';
 import '../models/app_settings.dart';
 import '../models/selector_mode.dart';
 import '../models/view_type.dart';
 import '../theme/app_theme.dart';
 import 'settings_screen.dart';
+import '../services/widget_service.dart';
 
 class ClockScreen extends ConsumerStatefulWidget {
   const ClockScreen({super.key});
@@ -20,6 +22,8 @@ class ClockScreen extends ConsumerStatefulWidget {
 }
 
 class _ClockScreenState extends ConsumerState<ClockScreen> {
+  int _lastWidgetMinute = -1;
+
   void _onLongPressEnd(LongPressEndDetails _) => _openSettings();
 
   void _onLongPressCancel() {}
@@ -34,6 +38,16 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final clockAsync = ref.watch(clockProvider);
+
+    // Push widget update once per minute (or when settings change).
+    ref.listen<AsyncValue<DateTime>>(clockProvider, (_, next) {
+      final now = next.valueOrNull;
+      if (now == null) return;
+      if (now.minute != _lastWidgetMinute) {
+        _lastWidgetMinute = now.minute;
+        WidgetService.update(ref.read(settingsProvider), now);
+      }
+    });
 
     // Keep fully immersive; re-apply on every build in case system restores chrome.
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -289,8 +303,15 @@ class _RemainingLabels extends StatelessWidget {
           Text(nextEvent,
               style: Theme.of(context).textTheme.bodyLarge),
         if (showProportion)
-          Text(proportionLabel(progress),
-              style: Theme.of(context).textTheme.headlineLarge),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ProportionPie(progress: progress, settings: settings),
+              const SizedBox(width: 8),
+              Text(proportionLabel(progress),
+                  style: Theme.of(context).textTheme.headlineLarge),
+            ],
+          ),
       ],
     );
   }

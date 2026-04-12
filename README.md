@@ -32,7 +32,8 @@ Each view shows the most meaningful unit of time — not just hours and minutes 
 - Responsive to device orientation: portrait and landscape both maintain large, readable controls
 - Large touch targets throughout (minimum 48×48dp)
 - View switching via large icon + word buttons (icon-only or word-only also available)
-- Optional labels: current time, start/end of range, time remaining as a countdown ("2h 14m left"), time remaining as plain language ("about halfway")
+- Optional labels: current time, start/end of range, time remaining as a countdown ("2h 14m left"), time until next event ("2h until Lunch"), time remaining as plain language ("about halfway") with a pie-slice graphic for pre-readers
+- Event markers: caregiver can pin named events to the Time bar (e.g. "Lunch", "Home") — displayed as tick marks with optional labels
 - All child-facing controls are toggle-only — children cannot access or change settings
 
 ### Caregiver settings
@@ -53,13 +54,15 @@ Accessed by long-pressing anywhere on the screen for 3 seconds. No PIN required.
 
 **Color themes** — all built-in themes meet WCAG AA contrast (4.5:1 minimum):
 
-| Theme | Bar color | Background |
-|-------|-----------|------------|
-| Default | Black | White |
-| High contrast | Black (thicker bar) | White |
-| Deuteranopia-safe | Blue | Light yellow |
-| Protanopia-safe | Blue | Light yellow |
-| Tritanopia-safe | Red | Teal |
+| Theme | Bar fill | Event ticks | Background |
+|-------|----------|-------------|------------|
+| Default | Red | Black | White |
+| High contrast | Red (thicker bar) | Black | White |
+| Deuteranopia-safe | Blue | Orange | Light yellow |
+| Protanopia-safe | Blue | Orange | Light yellow |
+| Tritanopia-safe | Red | Purple | Teal |
+
+Elapsed bar, event tick marks, and unfilled track each use distinct colors to avoid ambiguity. All themes have dark-mode equivalents.
 
 Every theme has a dark mode equivalent. Dark mode is an explicit toggle — it does not rely solely on the system setting.
 
@@ -100,12 +103,15 @@ lib/
 ├── app.dart                      # MaterialApp, theme wiring
 ├── models/
 │   ├── app_settings.dart         # All caregiver settings (immutable + copyWith)
+│   ├── app_event.dart            # Named event (label + TimeOfDay)
 │   ├── view_type.dart            # Enum: time | day | week | month | year
 │   ├── color_theme_type.dart     # Color pairs per colorblind mode
 │   └── selector_mode.dart        # Enum: iconAndWord | iconOnly | wordOnly
 ├── providers/
 │   ├── settings_provider.dart    # Riverpod StateNotifier + SharedPreferences
 │   └── clock_provider.dart       # Wall-clock aligned stream (1s tick)
+├── services/
+│   └── widget_service.dart       # Pushes state to Android home screen widget
 ├── utils/
 │   └── time_utils.dart           # Progress math, labels, countdown, proportion
 ├── theme/
@@ -114,21 +120,24 @@ lib/
 │   ├── clock_screen.dart         # Child-facing full-screen view
 │   └── settings_screen.dart      # Caregiver settings
 └── widgets/
-    ├── time_progress_bar.dart    # The core progress bar widget
+    ├── time_progress_bar.dart    # Progress bar with event tick marks
+    ├── proportion_pie.dart       # Pie-slice graphic for proportion label
     └── view_selector.dart        # View-switching button row
 ```
 
 **State management:** [Riverpod](https://riverpod.dev/)  
 **Persistence:** [shared_preferences](https://pub.dev/packages/shared_preferences)  
-**Font:** [google_fonts](https://pub.dev/packages/google_fonts) (Atkinson Hyperlegible)
+**Font:** [google_fonts](https://pub.dev/packages/google_fonts) (Atkinson Hyperlegible)  
+**Home widget:** [home_widget](https://pub.dev/packages/home_widget)
 
 ---
 
 ## Roadmap
 
-- [ ] Proportion label graphic (pie slice illustration for pre-readers)
+- [x] Proportion label graphic (pie slice illustration alongside "about halfway" text)
+- [x] Home screen widget (Android) — shows active view progress bar, current time, and countdown; updates once per minute while app is open, every 30 minutes from system
+- [ ] Home screen widget (iOS) — requires WidgetKit extension added via Xcode; Swift scaffolding ready once target is created
 - [ ] Optional system dark mode sync
-- [ ] Home screen widget (Android / iOS)
 - [ ] App Store + Google Play release
 
 ---

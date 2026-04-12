@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#FFFFFFFF">
+
+    <!-- "Prism • Day" header -->
+    <TextView
+        android:id="@+id/widget_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Prism"
+        android:textSize="11sp"
+        android:textColor="#FF757575"
+        android:letterSpacing="0.05" />
+
+    <!-- Current time / display label -->
+    <TextView
+        android:id="@+id/widget_display_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text=""
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FF212121" />
+
+    <!-- Progress bar -->
+    <ProgressBar
+        android:id="@+id/widget_progress_bar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="14dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp"
+        android:max="1000"
+        android:progress="0"
+        android:progressTint="#FFD32F2F"
+        android:progressBackgroundTint="#FFBDBDBD" />
+
+    <!-- Countdown ("5h 30m left") -->
+    <TextView
+        android:id="@+id/widget_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="12sp"
+        android:textColor="#FF757575" />
+
+</LinearLayout>
