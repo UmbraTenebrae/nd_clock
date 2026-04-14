@@ -2,7 +2,7 @@ name: nd_clock
 description: Prism — a neurodivergent-friendly clock with linear progress bars for time, day, week, month, and year.
 publish_to: 'none'
 
-version: 0.1.0+3
+version: 0.1.0+4
 
 environment:
   sdk: ^3.11.4
