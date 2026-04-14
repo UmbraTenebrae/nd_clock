@@ -17,7 +17,8 @@ class ProportionPie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = 28.0 * settings.fontSizeScale;
+    final deviceScale = MediaQuery.of(context).textScaler.scale(1);
+    final size = 28.0 * settings.fontSizeScale * deviceScale;
     final fill = AppTheme.barFillColor(settings);
     final track = AppTheme.trackColor(settings);
     return SizedBox(

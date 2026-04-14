@@ -117,40 +117,57 @@ class _PortraitLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final deviceScale = isTablet ? 1.5 : 1.0;
+    final textScale = isTablet ? 1.4 : 1.0;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final h = constraints.maxHeight;
+        final w = constraints.maxWidth;
+        // On tablet use width-based horizontal padding; on phone use height-based
+        // (which naturally fits the narrow portrait proportions).
+        final hPad = isTablet ? w * 0.06 : h * 0.06;
         return Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: h * 0.06, vertical: h * 0.05),
+          padding: EdgeInsets.symmetric(horizontal: hPad, vertical: h * 0.05),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Time, bar, and labels grouped and centred in available space
+              // Time, bar, and labels — scaled up on tablet.
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Text(
-                        timeString,
-                        style: Theme.of(context).textTheme.displayLarge,
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(textScale),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Text(
+                          timeString,
+                          style: Theme.of(context).textTheme.displayLarge,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: h * 0.04),
-                    TimeProgressBar(progress: progress, settings: settings, now: now),
-                    _StartEndLabels(settings: settings, now: now, view: view),
-                    SizedBox(height: h * 0.02),
-                    _RemainingLabels(
+                      SizedBox(height: h * 0.04),
+                      TimeProgressBar(
+                        progress: progress,
                         settings: settings,
                         now: now,
-                        view: view,
-                        progress: progress),
-                  ],
+                        deviceScale: deviceScale,
+                      ),
+                      _StartEndLabels(settings: settings, now: now, view: view),
+                      SizedBox(height: h * 0.02),
+                      _RemainingLabels(
+                          settings: settings,
+                          now: now,
+                          view: view,
+                          progress: progress),
+                    ],
+                  ),
                 ),
               ),
-              // Controls anchored to the bottom
+              // Controls — not scaled; touch targets stay at a sensible size.
               _DisplayToggles(settings: settings),
               SizedBox(height: h * 0.02),
               ViewSelector(settings: settings, onSelect: onSelect),
@@ -185,6 +202,10 @@ class _LandscapeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final deviceScale = isTablet ? 1.5 : 1.0;
+    final textScale = isTablet ? 1.4 : 1.0;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final h = constraints.maxHeight;
@@ -195,31 +216,41 @@ class _LandscapeLayout extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Main content fills available space and centres itself
+              // Main content — scaled up on tablet.
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Text(
-                        timeString,
-                        style: Theme.of(context).textTheme.headlineLarge,
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(textScale),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Text(
+                          timeString,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: h * 0.04),
-                    TimeProgressBar(progress: progress, settings: settings, now: now),
-                    _StartEndLabels(settings: settings, now: now, view: view),
-                    SizedBox(height: h * 0.02),
-                    _RemainingLabels(
+                      SizedBox(height: h * 0.04),
+                      TimeProgressBar(
+                        progress: progress,
                         settings: settings,
                         now: now,
-                        view: view,
-                        progress: progress),
-                  ],
+                        deviceScale: deviceScale,
+                      ),
+                      _StartEndLabels(settings: settings, now: now, view: view),
+                      SizedBox(height: h * 0.02),
+                      _RemainingLabels(
+                          settings: settings,
+                          now: now,
+                          view: view,
+                          progress: progress),
+                    ],
+                  ),
                 ),
               ),
-              // Bottom row: toggles + view selector always at the bottom
+              // Bottom row: toggles + view selector — not scaled.
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [

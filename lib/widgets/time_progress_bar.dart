@@ -17,12 +17,14 @@ class TimeProgressBar extends StatelessWidget {
   final double progress; // 0.0 – 1.0
   final AppSettings settings;
   final DateTime now;
+  final double deviceScale;
 
   const TimeProgressBar({
     super.key,
     required this.progress,
     required this.settings,
     required this.now,
+    this.deviceScale = 1.0,
   });
 
   @override
@@ -30,7 +32,7 @@ class TimeProgressBar extends StatelessWidget {
     final fill = AppTheme.barFillColor(settings);
     final track = AppTheme.trackColor(settings);
     final isHighContrast = settings.colorTheme == ColorThemeType.highContrast;
-    final barHeight = (isHighContrast ? 48.0 : 36.0) * settings.fontSizeScale;
+    final barHeight = (isHighContrast ? 48.0 : 36.0) * settings.fontSizeScale * deviceScale;
 
     final showMarkers = settings.activeView == ViewType.time &&
         settings.events.isNotEmpty;
