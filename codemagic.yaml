@@ -1,0 +1,155 @@
+# Codemagic CI/CD for Prism (nd_clock)
+#
+# Required setup in Codemagic UI → Teams → Global variables & secrets:
+#
+#   Group: android_signing
+#     CM_KEYSTORE          — base64-encoded release keystore (.jks)
+#     CM_KEYSTORE_PASSWORD — keystore password
+#     CM_KEY_ALIAS         — key alias
+#     CM_KEY_PASSWORD      — key password
+#
+#   Group: google_play
+#     CM_STORE_CREDENTIALS — Google Play service account JSON (base64)
+#
+#   Group: app_store_connect
+#     APP_STORE_APPLE_ID   — numeric App ID from App Store Connect (e.g. 1234567890)
+#     (API key set via Codemagic UI integrations — not a plain-text secret)
+
+workflows:
+
+  # ── Android release ──────────────────────────────────────────────────────────
+  android-release:
+    name: Android Release (Play Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      groups:
+        - android_signing
+        - google_play
+      vars:
+        PACKAGE_NAME: com.ndclock.nd_clock
+
+    scripts:
+      - name: Set up key.properties
+        script: |
+          echo "$CM_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/app/keystore.jks"
+          cat > "$CM_BUILD_DIR/android/key.properties" <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=app/keystore.jks
+          EOF
+
+      - name: Get dependencies
+        script: flutter pub get
+
+      - name: Run tests
+        script: flutter test
+
+      - name: Flutter analyze
+        script: flutter analyze
+
+      - name: Build Android App Bundle
+        script: flutter build appbundle --release
+
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt   # ProGuard mapping for crash de-obfuscation
+
+    publishing:
+      email:
+        recipients:
+          - builds@example.com             # replace with your address
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $CM_STORE_CREDENTIALS
+        track: internal                    # promote to alpha/beta/production manually
+
+  # ── iOS release ──────────────────────────────────────────────────────────────
+  ios-release:
+    name: iOS Release (App Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.spectrumworks.prism
+      groups:
+        - app_store_connect
+      vars:
+        APP_STORE_APPLE_ID: 1234567890    # replace with your App Store Connect app ID
+
+    scripts:
+      - name: Get dependencies
+        script: flutter pub get
+
+      - name: Run tests
+        script: flutter test
+
+      - name: Flutter analyze
+        script: flutter analyze
+
+      - name: Build IPA
+        # Codemagic injects signing certificates and provisioning profiles
+        # automatically when ios_signing is configured above.
+        script: flutter build ipa --release
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - builds@example.com             # replace with your address
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration                  # uses the API key set in Codemagic UI integrations
+        submit_to_testflight: true
+        submit_to_app_store: false         # flip to true for direct production release
+        beta_groups:
+          - Internal Testers
+
+  # ── PR check ─────────────────────────────────────────────────────────────────
+  # Runs on every pull request — analyze + test only, no signing needed.
+  pull-request:
+    name: PR Check
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: false                    # triggers on PRs targeting main
+
+    environment:
+      flutter: stable
+
+    scripts:
+      - name: Get dependencies
+        script: flutter pub get
+
+      - name: Flutter analyze
+        script: flutter analyze
+
+      - name: Run tests
+        script: flutter test
+
+    publishing:
+      email:
+        recipients:
+          - builds@example.com
+        notify:
+          success: false
+          failure: true
