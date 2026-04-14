@@ -294,22 +294,27 @@ class _RemainingLabels extends StatelessWidget {
         : null;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showCountdown)
           Text(countdownLabel(view, now, settings),
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineLarge),
         if (nextEvent != null)
           Text(nextEvent,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge),
         if (showProportion)
           Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ProportionPie(progress: progress, settings: settings),
               const SizedBox(width: 8),
-              Text(proportionLabel(progress),
-                  style: Theme.of(context).textTheme.headlineLarge),
+              Flexible(
+                child: Text(proportionLabel(progress),
+                    style: Theme.of(context).textTheme.headlineLarge),
+              ),
             ],
           ),
       ],
