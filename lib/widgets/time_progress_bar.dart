@@ -80,6 +80,13 @@ class TimeProgressBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: track,
                     borderRadius: BorderRadius.circular(barHeight / 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,

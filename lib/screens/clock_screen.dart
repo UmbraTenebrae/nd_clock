@@ -366,26 +366,46 @@ class _CompactViewSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final fg = theme.colorScheme.primary;
-    final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final trayColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.06);
+    final selectedBg = isDark ? const Color(0xFF2E2C2A) : Colors.white;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: settings.enabledViews.map((view) {
-        final isActive = view == settings.activeView;
-        final color = isActive ? bg : fg;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: GestureDetector(
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: trayColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: settings.enabledViews.map((view) {
+          final isActive = view == settings.activeView;
+          final color = isActive ? fg : fg.withValues(alpha: 0.45);
+          return GestureDetector(
             onTap: () => onSelect(view),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding:
-                  const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              decoration: BoxDecoration(
-                color: isActive ? fg : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: fg, width: isActive ? 0 : 1.5),
-              ),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: isActive
+                  ? BoxDecoration(
+                      color: selectedBg,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                              alpha: isDark ? 0.30 : 0.12),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    )
+                  : const BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
               child: switch (settings.selectorMode) {
                 SelectorMode.iconOnly =>
                   Icon(view.icon, color: color, size: 22),
@@ -394,7 +414,7 @@ class _CompactViewSelector extends StatelessWidget {
                         color: color,
                         fontSize: 13,
                         fontWeight: isActive
-                            ? FontWeight.bold
+                            ? FontWeight.w700
                             : FontWeight.normal)),
                 SelectorMode.iconAndWord => Column(
                     mainAxisSize: MainAxisSize.min,
@@ -406,15 +426,15 @@ class _CompactViewSelector extends StatelessWidget {
                               color: color,
                               fontSize: 11,
                               fontWeight: isActive
-                                  ? FontWeight.bold
+                                  ? FontWeight.w700
                                   : FontWeight.normal)),
                     ],
                   ),
               },
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -504,27 +524,29 @@ class _ToggleButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
         decoration: BoxDecoration(
-          color: active ? color.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: active ? color.withValues(alpha: 0.14) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: active ? color : color.withValues(alpha: 0.35),
-            width: 1.5,
+            color: active ? color : color.withValues(alpha: 0.22),
+            width: active ? 2.0 : 1.0,
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: active ? color : color.withValues(alpha: 0.5), size: 22),
-            const SizedBox(height: 2),
+            Icon(icon, color: active ? color : color.withValues(alpha: 0.45), size: 22),
+            const SizedBox(height: 3),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
-                color: active ? color : color.withValues(alpha: 0.5),
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                color: active ? color : color.withValues(alpha: 0.45),
               ),
             ),
           ],

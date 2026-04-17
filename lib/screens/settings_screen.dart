@@ -14,174 +14,231 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        centerTitle: false,
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
         children: [
           // --- Time format ---
           _SectionHeader('Time Format'),
-          SwitchListTile(
-            title: const Text('24-hour time'),
-            value: settings.use24Hour,
-            onChanged: (v) => notifier.update((s) => s.copyWith(use24Hour: v)),
-          ),
+          _SettingsCard(children: [
+            SwitchListTile(
+              title: const Text('24-hour time'),
+              value: settings.use24Hour,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(use24Hour: v)),
+            ),
+          ]),
 
           // --- Custom time range ---
           _SectionHeader('Time View Range'),
-          SwitchListTile(
-            title: const Text('Use custom time range'),
-            subtitle: const Text('Set a specific start and end time'),
-            value: settings.useCustomRange,
-            onChanged: (v) =>
-                notifier.update((s) => s.copyWith(useCustomRange: v)),
-          ),
-          if (settings.useCustomRange) ...[
-            _TimePicker(
-              label: 'Start time',
-              time: settings.customStartTime,
-              onChanged: (t) =>
-                  notifier.update((s) => s.copyWith(customStartTime: t)),
+          _SettingsCard(children: [
+            SwitchListTile(
+              title: const Text('Use custom time range'),
+              subtitle: const Text('Set a specific start and end time'),
+              value: settings.useCustomRange,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(useCustomRange: v)),
             ),
-            _TimePicker(
-              label: 'End time',
-              time: settings.customEndTime,
-              onChanged: (t) =>
-                  notifier.update((s) => s.copyWith(customEndTime: t)),
-            ),
-          ],
+            if (settings.useCustomRange) ...[
+              _TimePicker(
+                label: 'Start time',
+                time: settings.customStartTime,
+                onChanged: (t) =>
+                    notifier.update((s) => s.copyWith(customStartTime: t)),
+              ),
+              _TimePicker(
+                label: 'End time',
+                time: settings.customEndTime,
+                onChanged: (t) =>
+                    notifier.update((s) => s.copyWith(customEndTime: t)),
+              ),
+            ],
+          ]),
 
           // --- Enabled views ---
           _SectionHeader('Available Views'),
-          ...ViewType.values.map((view) {
-            final enabled = settings.enabledViews.contains(view);
-            return SwitchListTile(
-              title: Text(view.label),
-              value: enabled,
-              onChanged: (v) {
-                final next = List<ViewType>.from(settings.enabledViews);
-                if (v) {
-                  next.add(view);
-                  // Preserve ordering
-                  next.sort((a, b) =>
-                      ViewType.values.indexOf(a) -
-                      ViewType.values.indexOf(b));
-                } else {
-                  if (next.length <= 1) return; // must keep at least one
-                  next.remove(view);
-                }
-                final newActive = next.contains(settings.activeView)
-                    ? settings.activeView
-                    : next.first;
-                notifier.update((s) =>
-                    s.copyWith(enabledViews: next, activeView: newActive));
-              },
-            );
-          }),
+          _SettingsCard(children: [
+            ...ViewType.values.map((view) {
+              final enabled = settings.enabledViews.contains(view);
+              return SwitchListTile(
+                title: Text(view.label),
+                value: enabled,
+                onChanged: (v) {
+                  final next = List<ViewType>.from(settings.enabledViews);
+                  if (v) {
+                    next.add(view);
+                    next.sort((a, b) =>
+                        ViewType.values.indexOf(a) -
+                        ViewType.values.indexOf(b));
+                  } else {
+                    if (next.length <= 1) return;
+                    next.remove(view);
+                  }
+                  final newActive = next.contains(settings.activeView)
+                      ? settings.activeView
+                      : next.first;
+                  notifier.update(
+                      (s) => s.copyWith(enabledViews: next, activeView: newActive));
+                },
+              );
+            }),
+          ]),
 
           // --- View selector display ---
           _SectionHeader('View Selector Style'),
-          ...SelectorMode.values.map((mode) {
-            final label = switch (mode) {
-              SelectorMode.iconAndWord => 'Icon and word (default)',
-              SelectorMode.iconOnly => 'Icon only',
-              SelectorMode.wordOnly => 'Word only',
-            };
-            final isSelected = settings.selectorMode == mode;
-            return ListTile(
-              title: Text(label),
-              trailing: isSelected
-                  ? Icon(Icons.check_circle_rounded,
-                      color: Theme.of(context).colorScheme.primary)
-                  : const Icon(Icons.radio_button_unchecked),
-              onTap: () =>
-                  notifier.update((s) => s.copyWith(selectorMode: mode)),
-            );
-          }),
+          _SettingsCard(children: [
+            ...SelectorMode.values.map((mode) {
+              final label = switch (mode) {
+                SelectorMode.iconAndWord => 'Icon and word (default)',
+                SelectorMode.iconOnly => 'Icon only',
+                SelectorMode.wordOnly => 'Word only',
+              };
+              final isSelected = settings.selectorMode == mode;
+              return ListTile(
+                title: Text(label),
+                trailing: isSelected
+                    ? Icon(Icons.check_circle_rounded,
+                        color: theme.colorScheme.primary)
+                    : Icon(Icons.radio_button_unchecked,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                onTap: () =>
+                    notifier.update((s) => s.copyWith(selectorMode: mode)),
+              );
+            }),
+          ]),
 
           // --- Visual ---
           _SectionHeader('Appearance'),
-          SwitchListTile(
-            title: const Text('Dark mode'),
-            value: settings.darkMode,
-            onChanged: (v) =>
-                notifier.update((s) => s.copyWith(darkMode: v)),
-          ),
-          ListTile(
-            title: const Text('Color theme'),
-            subtitle: Text(settings.colorTheme.label),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showColorThemePicker(context, ref),
-          ),
-          ListTile(
-            title: const Text('Font size'),
-            subtitle: Slider(
-              value: settings.fontSizeScale,
-              min: 0.8,
-              max: 1.6,
-              divisions: 8,
-              label: '${(settings.fontSizeScale * 100).round()}%',
+          _SettingsCard(children: [
+            SwitchListTile(
+              title: const Text('Dark mode'),
+              value: settings.darkMode,
               onChanged: (v) =>
-                  notifier.update((s) => s.copyWith(fontSizeScale: v)),
+                  notifier.update((s) => s.copyWith(darkMode: v)),
             ),
-          ),
+            ListTile(
+              title: const Text('Color theme'),
+              subtitle: Text(settings.colorTheme.label),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: settings.colorTheme.barFillColor,
+                      border: Border.all(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+                ],
+              ),
+              onTap: () => _showColorThemePicker(context, ref),
+            ),
+            ListTile(
+              title: const Text('Font size'),
+              subtitle: Slider(
+                value: settings.fontSizeScale,
+                min: 0.8,
+                max: 1.6,
+                divisions: 8,
+                label: '${(settings.fontSizeScale * 100).round()}%',
+                onChanged: (v) =>
+                    notifier.update((s) => s.copyWith(fontSizeScale: v)),
+              ),
+            ),
+          ]),
 
           // --- Child-accessible options ---
           _SectionHeader('Child Display Options'),
-          const Text(
-            'Allow the child to toggle these on the main screen.',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 4),
+            child: Text(
+              'Allow the child to toggle these on the main screen.',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: const Text('Start / End labels'),
-            value: settings.caregiverAllowStartEnd,
-            onChanged: (v) =>
-                notifier.update((s) => s.copyWith(caregiverAllowStartEnd: v)),
-          ),
-          SwitchListTile(
-            title: const Text('Countdown ("2h 14m left")'),
-            value: settings.caregiverAllowCountdown,
-            onChanged: (v) => notifier
-                .update((s) => s.copyWith(caregiverAllowCountdown: v)),
-          ),
-          SwitchListTile(
-            title: const Text('Proportion ("about halfway")'),
-            value: settings.caregiverAllowProportion,
-            onChanged: (v) => notifier
-                .update((s) => s.copyWith(caregiverAllowProportion: v)),
-          ),
-          SwitchListTile(
-            title: const Text('Event labels'),
-            subtitle: const Text('Show labels on event markers'),
-            value: settings.caregiverAllowEventLabels,
-            onChanged: (v) => notifier
-                .update((s) => s.copyWith(caregiverAllowEventLabels: v)),
-          ),
+          _SettingsCard(children: [
+            SwitchListTile(
+              title: const Text('Start / End labels'),
+              value: settings.caregiverAllowStartEnd,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(caregiverAllowStartEnd: v)),
+            ),
+            SwitchListTile(
+              title: const Text('Countdown ("2h 14m left")'),
+              value: settings.caregiverAllowCountdown,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(caregiverAllowCountdown: v)),
+            ),
+            SwitchListTile(
+              title: const Text('Proportion ("about halfway")'),
+              value: settings.caregiverAllowProportion,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(caregiverAllowProportion: v)),
+            ),
+            SwitchListTile(
+              title: const Text('Event labels'),
+              subtitle: const Text('Show labels on event markers'),
+              value: settings.caregiverAllowEventLabels,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(caregiverAllowEventLabels: v)),
+            ),
+          ]),
 
           // --- Events ---
           _SectionHeader('Events (Time View)'),
-          const Text(
-            'Markers shown on the time bar for upcoming events.',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 4),
+            child: Text(
+              'Markers shown on the time bar for upcoming events.',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          ...settings.events.map((event) => ListTile(
-                leading: const Icon(Icons.flag_rounded),
-                title: Text(event.label),
-                subtitle: Text(event.time.format(context)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => notifier.deleteEvent(event.id),
-                ),
-                onTap: () => _showEventDialog(context, ref, event: event),
-              )),
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline),
-            title: const Text('Add event'),
-            onTap: () => _showEventDialog(context, ref),
-          ),
+          if (settings.events.isNotEmpty) ...[
+            _SettingsCard(children: [
+              ...settings.events.map((event) => ListTile(
+                    leading: Icon(Icons.flag_rounded,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+                    title: Text(event.label),
+                    subtitle: Text(event.time.format(context)),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete_outline,
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.4)),
+                      onPressed: () => notifier.deleteEvent(event.id),
+                    ),
+                    onTap: () => _showEventDialog(context, ref, event: event),
+                  )),
+            ]),
+            const SizedBox(height: 8),
+          ],
+          _SettingsCard(children: [
+            ListTile(
+              leading: Icon(Icons.add_circle_outline,
+                  color: theme.colorScheme.primary),
+              title: const Text('Add event'),
+              onTap: () => _showEventDialog(context, ref),
+            ),
+          ]),
         ],
       ),
     );
@@ -190,10 +247,8 @@ class SettingsScreen extends ConsumerWidget {
   void _showEventDialog(BuildContext context, WidgetRef ref,
       {AppEvent? event}) {
     final notifier = ref.read(settingsProvider.notifier);
-    final labelController =
-        TextEditingController(text: event?.label ?? '');
-    TimeOfDay selectedTime =
-        event?.time ?? TimeOfDay.now();
+    final labelController = TextEditingController(text: event?.label ?? '');
+    TimeOfDay selectedTime = event?.time ?? TimeOfDay.now();
 
     showDialog(
       context: context,
@@ -219,9 +274,7 @@ class SettingsScreen extends ConsumerWidget {
                     context: ctx,
                     initialTime: selectedTime,
                   );
-                  if (picked != null) {
-                    setState(() => selectedTime = picked);
-                  }
+                  if (picked != null) setState(() => selectedTime = picked);
                 },
               ),
             ],
@@ -261,24 +314,61 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (_) => Column(
         mainAxisSize: MainAxisSize.min,
-        children: ColorThemeType.values.map((theme) {
-          return ListTile(
-            title: Text(theme.label),
-            leading: CircleAvatar(
-              backgroundColor: theme.barFillColor,
-              child: Icon(Icons.check,
-                  color: theme.backgroundColor, size: 16),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            onTap: () {
-              notifier.update((s) => s.copyWith(colorTheme: theme));
-              Navigator.pop(context);
-            },
-          );
-        }).toList(),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Color Theme',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+          ),
+          ...ColorThemeType.values.map((ct) => ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                title: Text(ct.label),
+                leading: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ct.barFillColor,
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                onTap: () {
+                  notifier.update((s) => s.copyWith(colorTheme: ct));
+                  Navigator.pop(context);
+                },
+              )),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -287,15 +377,58 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      padding: const EdgeInsets.only(top: 28, bottom: 8, left: 4),
       child: Text(
         title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              letterSpacing: 1.2,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-            ),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
+          color:
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.55),
+        ),
       ),
     );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF252421) : Colors.white;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.07)
+        : Colors.black.withValues(alpha: 0.06);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 0.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: _withDividers(children, theme.dividerColor),
+      ),
+    );
+  }
+
+  static List<Widget> _withDividers(List<Widget> items, Color dividerColor) {
+    if (items.length <= 1) return items;
+    final result = <Widget>[];
+    for (int i = 0; i < items.length; i++) {
+      result.add(items[i]);
+      if (i < items.length - 1) {
+        result.add(Divider(
+            height: 0.5, thickness: 0.5, indent: 16, color: dividerColor));
+      }
+    }
+    return result;
   }
 }
 

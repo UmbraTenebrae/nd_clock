@@ -28,6 +28,7 @@ extension ColorThemeData on ColorThemeType {
   Color get barColor {
     switch (this) {
       case ColorThemeType.defaultTheme:
+        return const Color(0xFF1A1918); // warm near-black
       case ColorThemeType.highContrast:
         return Colors.black;
       case ColorThemeType.deuteranopia:
@@ -42,6 +43,7 @@ extension ColorThemeData on ColorThemeType {
   Color get barColorDark {
     switch (this) {
       case ColorThemeType.defaultTheme:
+        return const Color(0xFFF2EFE8); // warm near-white
       case ColorThemeType.highContrast:
         return Colors.white;
       case ColorThemeType.deuteranopia:
@@ -80,20 +82,31 @@ extension ColorThemeData on ColorThemeType {
     }
   }
 
-  /// Track (unfilled bar) color in light mode — neutral grey for all themes.
+  /// Track (unfilled bar) color in light mode.
   Color get barTrackColor {
-    return const Color(0xFFBDBDBD); // grey 400
+    switch (this) {
+      case ColorThemeType.defaultTheme:
+        return const Color(0xFFD9D5CC); // warm gray
+      default:
+        return const Color(0xFFBDBDBD); // grey 400
+    }
   }
 
   /// Track (unfilled bar) color in dark mode.
   Color get barTrackColorDark {
-    return const Color(0xFF616161); // grey 700
+    switch (this) {
+      case ColorThemeType.defaultTheme:
+        return const Color(0xFF3D3B38); // warm dark gray
+      default:
+        return const Color(0xFF616161); // grey 700
+    }
   }
 
   /// Scaffold background color in light mode.
   Color get backgroundColor {
     switch (this) {
       case ColorThemeType.defaultTheme:
+        return const Color(0xFFF7F4EF); // warm cream
       case ColorThemeType.highContrast:
         return Colors.white;
       case ColorThemeType.deuteranopia:
@@ -108,6 +121,7 @@ extension ColorThemeData on ColorThemeType {
   Color get backgroundColorDark {
     switch (this) {
       case ColorThemeType.defaultTheme:
+        return const Color(0xFF1C1A18); // warm charcoal
       case ColorThemeType.highContrast:
         return Colors.black;
       case ColorThemeType.deuteranopia:

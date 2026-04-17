@@ -16,10 +16,12 @@ class AppTheme {
       displayLarge: baseTextTheme.displayLarge?.copyWith(
         fontSize: (57 * settings.fontSizeScale).clamp(32, 112),
         color: fgColor,
+        fontWeight: FontWeight.w700,
       ),
       headlineLarge: baseTextTheme.headlineLarge?.copyWith(
         fontSize: (32 * settings.fontSizeScale).clamp(20, 64),
         color: fgColor,
+        fontWeight: FontWeight.w600,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
         fontSize: (18 * settings.fontSizeScale).clamp(14, 36),
@@ -30,6 +32,11 @@ class AppTheme {
         color: fgColor,
       ),
     );
+
+    final cardSurface = isDark ? const Color(0xFF252421) : Colors.white;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.08);
 
     return ThemeData(
       brightness: isDark ? Brightness.dark : Brightness.light,
@@ -42,11 +49,44 @@ class AppTheme {
         onSecondary: bgColor,
         error: Colors.red,
         onError: Colors.white,
-        surface: bgColor,
+        surface: cardSurface,
         onSurface: fgColor,
       ),
       textTheme: scaledTextTheme,
       iconTheme: IconThemeData(color: fgColor, size: 32 * settings.fontSizeScale),
+      appBarTheme: AppBarTheme(
+        backgroundColor: bgColor,
+        foregroundColor: fgColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleTextStyle: GoogleFonts.atkinsonHyperlegible(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: fgColor,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: cardSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: EdgeInsets.zero,
+      ),
+      dividerColor: dividerColor,
+      dividerTheme: DividerThemeData(
+        color: dividerColor,
+        thickness: 0.5,
+        space: 0.5,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cardSurface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: cardSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
     );
   }
 
