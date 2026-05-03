@@ -7,12 +7,14 @@ import '../utils/time_utils.dart';
 import '../widgets/time_progress_bar.dart';
 import '../widgets/view_selector.dart';
 import '../widgets/proportion_pie.dart';
+import '../models/app_event.dart';
 import '../models/app_settings.dart';
 import '../models/selector_mode.dart';
 import '../models/view_type.dart';
 import '../theme/app_theme.dart';
 import 'settings_screen.dart';
 import '../services/widget_service.dart';
+import '../services/chime_service.dart';
 
 class ClockScreen extends ConsumerStatefulWidget {
   const ClockScreen({super.key});
@@ -23,6 +25,31 @@ class ClockScreen extends ConsumerStatefulWidget {
 
 class _ClockScreenState extends ConsumerState<ClockScreen> {
   int _lastWidgetMinute = -1;
+  int _lastDayOfYear = -1;
+  // IDs of events whose chime has already fired today (or that were already
+  // past when the app started). Cleared on day rollover.
+  final Set<String> _triggeredToday = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _lastDayOfYear = _dayOfYear(now);
+    // Pre-mark already-passed events so the chime doesn't fire late on launch.
+    final settings = ref.read(settingsProvider);
+    _markPastEventsTriggered(settings.events, now);
+  }
+
+  int _dayOfYear(DateTime dt) =>
+      dt.difference(DateTime(dt.year, 1, 1)).inDays;
+
+  void _markPastEventsTriggered(List<AppEvent> events, DateTime now) {
+    final nowMinutes = now.hour * 60 + now.minute;
+    for (final event in events) {
+      final eventMinutes = event.time.hour * 60 + event.time.minute;
+      if (eventMinutes <= nowMinutes) _triggeredToday.add(event.id);
+    }
+  }
 
   void _onLongPressEnd(LongPressEndDetails _) => _openSettings();
 
@@ -39,10 +66,54 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     final settings = ref.watch(settingsProvider);
     final clockAsync = ref.watch(clockProvider);
 
-    // Push widget update once per minute (or when settings change).
+    // Settings changes: handle event additions/edits/deletions so that newly
+    // added past-time events don't fire late, and time edits re-arm.
+    ref.listen<AppSettings>(settingsProvider, (prev, next) {
+      final prevById = {
+        for (final e in (prev?.events ?? const <AppEvent>[])) e.id: e
+      };
+      final now = DateTime.now();
+      final nowMinutes = now.hour * 60 + now.minute;
+      for (final event in next.events) {
+        final prevEvent = prevById[event.id];
+        final eventMinutes = event.time.hour * 60 + event.time.minute;
+        if (prevEvent == null) {
+          if (eventMinutes <= nowMinutes) _triggeredToday.add(event.id);
+        } else if (prevEvent.time != event.time) {
+          if (eventMinutes <= nowMinutes) {
+            _triggeredToday.add(event.id);
+          } else {
+            _triggeredToday.remove(event.id);
+          }
+        }
+      }
+      final nextIds = next.events.map((e) => e.id).toSet();
+      _triggeredToday.removeWhere((id) => !nextIds.contains(id));
+    });
+
+    // Per-tick: chime check, day rollover, and minute-aligned widget push.
     ref.listen<AsyncValue<DateTime>>(clockProvider, (_, next) {
       final now = next.valueOrNull;
       if (now == null) return;
+
+      final today = _dayOfYear(now);
+      if (today != _lastDayOfYear) {
+        _lastDayOfYear = today;
+        _triggeredToday.clear();
+        _markPastEventsTriggered(ref.read(settingsProvider).events, now);
+      }
+
+      if (settings.eventChimesEnabled) {
+        for (final event in settings.events) {
+          if (_triggeredToday.contains(event.id)) continue;
+          if (event.time.hour == now.hour &&
+              event.time.minute == now.minute) {
+            _triggeredToday.add(event.id);
+            ChimeService.play();
+          }
+        }
+      }
+
       if (now.minute != _lastWidgetMinute) {
         _lastWidgetMinute = now.minute;
         WidgetService.update(ref.read(settingsProvider), now);

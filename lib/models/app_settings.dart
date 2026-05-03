@@ -39,6 +39,7 @@ class AppSettings {
   final List<AppEvent> events;
   final bool caregiverAllowEventLabels;
   final bool childShowEventLabels;
+  final bool eventChimesEnabled;
 
   const AppSettings({
     this.useCustomRange = false,
@@ -66,6 +67,7 @@ class AppSettings {
     this.events = const [],
     this.caregiverAllowEventLabels = true,
     this.childShowEventLabels = true,
+    this.eventChimesEnabled = true,
   });
 
   AppSettings copyWith({
@@ -88,6 +90,7 @@ class AppSettings {
     List<AppEvent>? events,
     bool? caregiverAllowEventLabels,
     bool? childShowEventLabels,
+    bool? eventChimesEnabled,
   }) {
     return AppSettings(
       useCustomRange: useCustomRange ?? this.useCustomRange,
@@ -113,6 +116,7 @@ class AppSettings {
       caregiverAllowEventLabels:
           caregiverAllowEventLabels ?? this.caregiverAllowEventLabels,
       childShowEventLabels: childShowEventLabels ?? this.childShowEventLabels,
+      eventChimesEnabled: eventChimesEnabled ?? this.eventChimesEnabled,
     );
   }
 }

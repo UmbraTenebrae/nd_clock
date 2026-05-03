@@ -213,6 +213,16 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          _SettingsCard(children: [
+            SwitchListTile(
+              title: const Text('Play chime at event time'),
+              subtitle: const Text('Plays once when the app is open'),
+              value: settings.eventChimesEnabled,
+              onChanged: (v) =>
+                  notifier.update((s) => s.copyWith(eventChimesEnabled: v)),
+            ),
+          ]),
+          const SizedBox(height: 8),
           if (settings.events.isNotEmpty) ...[
             _SettingsCard(children: [
               ...settings.events.map((event) => ListTile(

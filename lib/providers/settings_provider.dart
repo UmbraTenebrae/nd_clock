@@ -86,6 +86,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           prefs.getBool('${_prefix}caregiverAllowEventLabels') ?? true,
       childShowEventLabels:
           prefs.getBool('${_prefix}childShowEventLabels') ?? true,
+      eventChimesEnabled:
+          prefs.getBool('${_prefix}eventChimesEnabled') ?? true,
     );
   }
 
@@ -137,6 +139,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
         '${_prefix}caregiverAllowEventLabels', state.caregiverAllowEventLabels);
     await prefs.setBool(
         '${_prefix}childShowEventLabels', state.childShowEventLabels);
+    await prefs.setBool(
+        '${_prefix}eventChimesEnabled', state.eventChimesEnabled);
   }
 
   void update(AppSettings Function(AppSettings) updater) {
