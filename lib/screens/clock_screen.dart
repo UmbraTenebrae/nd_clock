@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../providers/clock_provider.dart';
 import '../providers/settings_provider.dart';
@@ -40,12 +41,41 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     final settings = ref.read(settingsProvider);
     _markPastEventsTriggered(settings.events, now);
     WakelockPlus.enable();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _maybeShowSettingsHint());
   }
 
   @override
   void dispose() {
     WakelockPlus.disable();
     super.dispose();
+  }
+
+  // Shows a one-time hint explaining how to reach the settings screen. Fires on
+  // the very first launch (key absent → defaults to false) and, for existing
+  // installs, on the first launch after this hint shipped.
+  Future<void> _maybeShowSettingsHint() async {
+    const key = 'nd_clock_hasSeenSettingsHint';
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(key) ?? false) return;
+    await prefs.setBool(key, true);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.touch_app_rounded, size: 36),
+        title: const Text('Open settings'),
+        content: const Text(
+          'Press and hold anywhere on the screen to open caregiver settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
   }
 
   int _dayOfYear(DateTime dt) =>
