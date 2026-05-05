@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../providers/clock_provider.dart';
 import '../providers/settings_provider.dart';
 import '../utils/time_utils.dart';
@@ -38,6 +39,13 @@ class _ClockScreenState extends ConsumerState<ClockScreen> {
     // Pre-mark already-passed events so the chime doesn't fire late on launch.
     final settings = ref.read(settingsProvider);
     _markPastEventsTriggered(settings.events, now);
+    WakelockPlus.enable();
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
   }
 
   int _dayOfYear(DateTime dt) =>
